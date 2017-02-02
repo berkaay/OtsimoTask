@@ -6,20 +6,25 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 // Bu kodu çalıştırmak için command line'dan `go run task.go` çalıştırman yeterli.
+var (
+	paragraphCount int
+	chapterCount   int
+	chapters       [][]string
+	paragraphs     []string
+)
 
 //readBook reads the book at filePath. Keep the at a glabal variable at access it at 'count' and 'query' functions
 func readBook(filePath string) {
 	//	YOUR CODE HERE. Read the book and save it to a global variable, something like `var Book [][]string`
 	//open file
-	chapters := [][]string{}
-	paragraphs := []string{}
+	paragraphCount = 0
+	chapterCount = 0
 	tempPar := ""
-	paragraphCount := 0
-	chapterCount := 0
 	emptyCount := 0
 	endOfParagraph := false
 	file, err := os.Open(filePath)
@@ -28,28 +33,26 @@ func readBook(filePath string) {
 	}
 	//close file after you are done with it
 	defer file.Close()
-
 	//--regexes
 	isChapter, _ := regexp.Compile("Chapter [0-9][0-9]?")
 	isEmptyLine, _ := regexp.Compile("^$")
 	//--
-
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if isChapter.MatchString(line) {
-			fmt.Println("chapter")
+			//fmt.Println("chapter")
 			chapters = append(chapters, paragraphs)
 			chapterCount++
 			paragraphs = []string{}
 		}
 		if isEmptyLine.MatchString(line) {
-			fmt.Println("empty")
+			//fmt.Println("empty")
 			emptyCount++
 			endOfParagraph = true
 		} else { //para
 			if endOfParagraph {
-				fmt.Println("Paragraph")
+				//	fmt.Println("Paragraph")
 				paragraphs = append(paragraphs, tempPar)
 				paragraphCount++
 				endOfParagraph = false
@@ -75,18 +78,24 @@ func query(w http.ResponseWriter, r *http.Request) {
 	result := ""
 	fmt.Println(p)
 	fmt.Println(c)
+	cint, _ := strconv.Atoi(c)
+	pint, _ := strconv.Atoi(p)
+	if p == "" {
+		fmt.Fprint(w, "no p")
+		fmt.Fprint(w, chapters[cint])
 
-	/*
-		YOUR CODE HERE
-	*/
+	} else {
+		fmt.Fprint(w, chapters[cint][pint])
+
+	}
 	fmt.Fprint(w, result)
 }
 func count(w http.ResponseWriter, r *http.Request) {
 	chapCount := 0
 	paraCount := 0
-	/*
-		YOUR CODE HERE
-	*/
+	chapCount = chapterCount
+	paraCount = paragraphCount
+
 	fmt.Fprintf(w, "chapter: %d\nparagraph: %d\n", chapCount, paraCount)
 }
 func otherwise(w http.ResponseWriter, r *http.Request) {
